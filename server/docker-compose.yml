@@ -35,7 +35,7 @@ services:
   # Vue Dashboard (production build served by nginx)
   dashboard:
     build:
-      context: ./dashboard
+      context: ../dashboard
       dockerfile: Dockerfile
     container_name: hydro-dashboard
     ports:
