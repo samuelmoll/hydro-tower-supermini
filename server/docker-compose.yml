@@ -24,7 +24,7 @@ services:
       - HYDRO_MQTT_BROKER=mosquitto
       - HYDRO_MQTT_PORT=1883
       - HYDRO_MQTT_USERNAME=hydro
-      - HYDRO_MQTT_PASSWORD=hydro_secret
+      - HYDRO_MQTT_PASSWORD=Easy2Remember
       - HYDRO_DATABASE_URL=sqlite:///./data/hydro.db
     volumes:
       - ./data:/app/data

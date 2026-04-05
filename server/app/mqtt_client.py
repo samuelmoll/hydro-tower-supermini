@@ -4,7 +4,7 @@ MQTT Client for communication with ESP32
 
 import json
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Callable, Optional
 import paho.mqtt.client as mqtt
 from sqlalchemy.orm import Session
@@ -98,7 +98,7 @@ class MQTTClient:
             reading = SensorReading(
                 temperature=data.get("temperature", 0),
                 humidity=data.get("humidity", 0),
-                timestamp=datetime.now(datetime.timezone.utc)
+                timestamp=datetime.now(timezone.utc)
             )
             db.add(reading)
             db.commit()
@@ -124,7 +124,7 @@ class MQTTClient:
             status.wifi_rssi = data.get("wifi_rssi", 0)
             status.uptime_sec = data.get("uptime_sec", 0)
             status.free_heap = data.get("free_heap", 0)
-            status.last_seen = datetime.now(datetime.timezone.utc)
+            status.last_seen = datetime.now(timezone.utc)
             
             db.commit()
             logger.debug(f"Updated device status: {data}")
