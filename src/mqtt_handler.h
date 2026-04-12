@@ -55,4 +55,9 @@ void mqttOnScheduleConfig(void (*callback)(JsonArray& schedules));
  */
 void mqttOnSensorConfig(void (*callback)(int intervalSec));
 
+/**
+ * Register callback for timezone configuration
+ */
+void mqttOnTimezoneConfig(void (*callback)(int gmtOffsetSec, int dstOffsetSec));
+
 #endif // MQTT_HANDLER_H

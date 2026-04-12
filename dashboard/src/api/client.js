@@ -64,5 +64,14 @@ export default {
     return apiClient.post('/sensor/config', null, {
       params: { interval_sec: intervalSec }
     })
+  },
+
+  // Timezone
+  getTimezone() {
+    return apiClient.get('/timezone')
+  },
+
+  updateTimezone(timezone) {
+    return apiClient.put('/timezone', { timezone })
   }
 }

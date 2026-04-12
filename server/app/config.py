@@ -26,6 +26,10 @@ class Settings(BaseSettings):
     mqtt_topic_pump_control: str = "hydro/control/pump"
     mqtt_topic_schedule_config: str = "hydro/config/schedule"
     mqtt_topic_sensor_config: str = "hydro/config/sensor"
+    mqtt_topic_timezone_config: str = "hydro/config/timezone"
+    
+    # Timezone (IANA timezone name, e.g., "Australia/Sydney")
+    timezone: str = "UTC"
     
     # Database
     database_url: str = "sqlite:///./hydro.db"

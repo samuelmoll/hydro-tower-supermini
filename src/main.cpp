@@ -69,6 +69,14 @@ void onSensorConfig(int intervalSec) {
 }
 
 /**
+ * Callback for timezone configuration from MQTT
+ */
+void onTimezoneConfig(int gmtOffsetSec, int dstOffsetSec) {
+    DEBUG_PRINTF("[Main] Timezone changed: GMT%+d DST%+d\n", gmtOffsetSec / 3600, dstOffsetSec / 3600);
+    pumpSetTimezone(gmtOffsetSec, dstOffsetSec);
+}
+
+/**
  * Publish periodic status update
  */
 void publishStatus() {
@@ -123,6 +131,7 @@ void setup() {
         mqttOnPumpControl(onPumpControl);
         mqttOnScheduleConfig(onScheduleConfig);
         mqttOnSensorConfig(onSensorConfig);
+        mqttOnTimezoneConfig(onTimezoneConfig);
     } else {
         DEBUG_PRINTLN("[Main] WiFi not connected, MQTT will retry when connected");
     }

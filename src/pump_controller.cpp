@@ -24,6 +24,10 @@ static const unsigned long SCHEDULE_CHECK_INTERVAL = 30000; // Check every 30 se
 // Time synced flag
 static bool timeSynced = false;
 
+// Timezone settings (stored in NVS)
+static int gmtOffsetSec = NTP_GMT_OFFSET_SEC;
+static int dstOffsetSec = NTP_DAYLIGHT_OFFSET_SEC;
+
 /**
  * Set relay state (handles active low/high logic)
  */
@@ -46,6 +50,10 @@ void loadSchedules() {
     prefs.begin(PREF_NAMESPACE, true); // Read-only
     scheduleCount = prefs.getInt(PREF_KEY_SCHEDULE_COUNT, 0);
     
+    // Load timezone settings
+    gmtOffsetSec = prefs.getInt(PREF_KEY_GMT_OFFSET, NTP_GMT_OFFSET_SEC);
+    dstOffsetSec = prefs.getInt(PREF_KEY_DST_OFFSET, NTP_DAYLIGHT_OFFSET_SEC);
+    
     for (int i = 0; i < scheduleCount && i < MAX_SCHEDULES; i++) {
         char key[16];
         snprintf(key, sizeof(key), "%s%d", PREF_KEY_SCHEDULE_PREFIX, i);
@@ -60,6 +68,7 @@ void loadSchedules() {
     
     prefs.end();
     DEBUG_PRINTF("[Pump] Loaded %d schedules from NVS\n", scheduleCount);
+    DEBUG_PRINTF("[Pump] Timezone: GMT%+d DST%+d\n", gmtOffsetSec / 3600, dstOffsetSec / 3600);
 }
 
 /**
@@ -268,8 +277,9 @@ void pumpUpdateSchedulesFromJson(JsonArray& jsonSchedules) {
 
 void pumpSyncTime() {
     DEBUG_PRINTLN("[Pump] Syncing time with NTP...");
+    DEBUG_PRINTF("[Pump] Using GMT offset: %d sec, DST offset: %d sec\n", gmtOffsetSec, dstOffsetSec);
     
-    configTime(NTP_GMT_OFFSET_SEC, NTP_DAYLIGHT_OFFSET_SEC, NTP_SERVER);
+    configTime(gmtOffsetSec, dstOffsetSec, NTP_SERVER);
     
     struct tm timeinfo;
     if (getLocalTime(&timeinfo, 10000)) { // 10 second timeout
@@ -278,6 +288,26 @@ void pumpSyncTime() {
     } else {
         DEBUG_PRINTLN("[Pump] Failed to sync time");
     }
+}
+
+void pumpSetTimezone(int newGmtOffsetSec, int newDstOffsetSec) {
+    DEBUG_PRINTF("[Pump] Setting timezone: GMT%+d DST%+d\n", newGmtOffsetSec / 3600, newDstOffsetSec / 3600);
+    
+    gmtOffsetSec = newGmtOffsetSec;
+    dstOffsetSec = newDstOffsetSec;
+    
+    // Save to NVS
+    prefs.begin(PREF_NAMESPACE, false);
+    prefs.putInt(PREF_KEY_GMT_OFFSET, gmtOffsetSec);
+    prefs.putInt(PREF_KEY_DST_OFFSET, dstOffsetSec);
+    prefs.end();
+    
+    // Re-sync time with new timezone
+    pumpSyncTime();
+}
+
+int pumpGetGmtOffset() {
+    return gmtOffsetSec;
 }
 
 String pumpGetTimeString() {

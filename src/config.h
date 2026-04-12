@@ -2,6 +2,7 @@
 #define CONFIG_H
 
 #include <Arduino.h>  // Required for Serial in debug macros
+#include "secrets.h" // Include WiFi and MQTT credentials
 
 // =============================================================================
 // HARDWARE CONFIGURATION
@@ -12,7 +13,7 @@
 #define DHT_TYPE DHT11      // Sensor type (DHT11 or DHT22)
 
 // Relay for Pump Control
-#define RELAY_PIN 5         // GPIO pin connected to relay signal
+#define RELAY_PIN 3         // GPIO pin connected to relay signal
 #define RELAY_ACTIVE_LOW false  // Set to true if relay triggers on LOW signal
 
 // =============================================================================
@@ -47,6 +48,7 @@
 #define MQTT_TOPIC_PUMP_CONTROL "hydro/control/pump"      // Manual pump control
 #define MQTT_TOPIC_SCHEDULE_CONFIG "hydro/config/schedule" // Schedule updates
 #define MQTT_TOPIC_SENSOR_CONFIG "hydro/config/sensor"     // Sensor interval
+#define MQTT_TOPIC_TIMEZONE_CONFIG "hydro/config/timezone" // Timezone updates
 
 // =============================================================================
 // TIMING CONFIGURATION
@@ -71,16 +73,15 @@
 #define MAX_SCHEDULES 8
 
 // Default pump duration if not specified (in minutes)
-#define DEFAULT_PUMP_DURATION_MIN 5
+#define DEFAULT_PUMP_DURATION_MIN 15
 
-// =============================================================================
-// PREFERENCES (NVS) KEYS
-// =============================================================================
-
+// Preferences (NVS) keys
 #define PREF_NAMESPACE "hydro"
 #define PREF_KEY_SENSOR_INTERVAL "sensorInt"
 #define PREF_KEY_SCHEDULE_COUNT "schedCount"
 #define PREF_KEY_SCHEDULE_PREFIX "sched_"
+#define PREF_KEY_GMT_OFFSET "gmtOffset"
+#define PREF_KEY_DST_OFFSET "dstOffset"
 
 // =============================================================================
 // DEBUG SETTINGS

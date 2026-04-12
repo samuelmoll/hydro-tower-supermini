@@ -175,6 +175,18 @@ class MQTTClient:
         )
         return result.is_published()
     
+    def publish_timezone(self, gmt_offset_sec: int, daylight_offset_sec: int = 0):
+        """Send timezone configuration to ESP32"""
+        payload = {
+            "gmt_offset_sec": gmt_offset_sec,
+            "daylight_offset_sec": daylight_offset_sec
+        }
+        result = self.client.publish(
+            settings.mqtt_topic_timezone_config,
+            json.dumps(payload)
+        )
+        return result.is_published()
+    
     def on_sensor(self, callback: Callable):
         """Register callback for sensor readings"""
         self._on_sensor_callback = callback

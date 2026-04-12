@@ -90,6 +90,81 @@
       </div>
     </div>
 
+    <!-- Timezone settings -->
+    <div class="card">
+      <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Timezone Settings</h2>
+      
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Timezone
+          </label>
+          <select v-model="selectedTimezone" class="input w-full md:w-auto">
+            <optgroup label="Americas">
+              <option value="America/New_York">Eastern Time (New York)</option>
+              <option value="America/Chicago">Central Time (Chicago)</option>
+              <option value="America/Denver">Mountain Time (Denver)</option>
+              <option value="America/Los_Angeles">Pacific Time (Los Angeles)</option>
+              <option value="America/Anchorage">Alaska Time</option>
+              <option value="Pacific/Honolulu">Hawaii Time</option>
+              <option value="America/Toronto">Toronto</option>
+              <option value="America/Vancouver">Vancouver</option>
+              <option value="America/Sao_Paulo">São Paulo</option>
+              <option value="America/Mexico_City">Mexico City</option>
+            </optgroup>
+            <optgroup label="Europe">
+              <option value="Europe/London">London (GMT/BST)</option>
+              <option value="Europe/Paris">Paris (CET)</option>
+              <option value="Europe/Berlin">Berlin (CET)</option>
+              <option value="Europe/Amsterdam">Amsterdam (CET)</option>
+              <option value="Europe/Madrid">Madrid (CET)</option>
+              <option value="Europe/Rome">Rome (CET)</option>
+              <option value="Europe/Moscow">Moscow</option>
+            </optgroup>
+            <optgroup label="Asia Pacific">
+              <option value="Asia/Dubai">Dubai</option>
+              <option value="Asia/Kolkata">India (Kolkata)</option>
+              <option value="Asia/Singapore">Singapore</option>
+              <option value="Asia/Hong_Kong">Hong Kong</option>
+              <option value="Asia/Shanghai">Shanghai</option>
+              <option value="Asia/Tokyo">Tokyo</option>
+              <option value="Asia/Seoul">Seoul</option>
+            </optgroup>
+            <optgroup label="Australia / Oceania">
+              <option value="Australia/Perth">Perth (AWST)</option>
+              <option value="Australia/Adelaide">Adelaide (ACST)</option>
+              <option value="Australia/Sydney">Sydney (AEST)</option>
+              <option value="Australia/Brisbane">Brisbane (AEST - No DST)</option>
+              <option value="Australia/Melbourne">Melbourne (AEST)</option>
+              <option value="Pacific/Auckland">Auckland (NZST)</option>
+            </optgroup>
+            <optgroup label="Other">
+              <option value="UTC">UTC</option>
+            </optgroup>
+          </select>
+        </div>
+
+        <div v-if="currentTimezone" class="text-sm text-gray-500 dark:text-gray-400">
+          <p>Current: {{ currentTimezone.timezone }}</p>
+          <p>UTC Offset: {{ formatUtcOffset(currentTimezone.gmt_offset_sec) }}</p>
+        </div>
+
+        <div v-if="selectedTimezone !== currentTimezone?.timezone" class="pt-2">
+          <button
+            @click="saveTimezone"
+            :disabled="savingTimezone"
+            class="btn btn-primary"
+          >
+            {{ savingTimezone ? 'Saving...' : 'Update Timezone' }}
+          </button>
+        </div>
+
+        <p v-if="timezoneMessage" class="text-sm" :class="timezoneSuccess ? 'text-green-600' : 'text-red-600'">
+          {{ timezoneMessage }}
+        </p>
+      </div>
+    </div>
+
     <!-- Edit modal -->
     <div
       v-if="showModal"
@@ -185,6 +260,13 @@ export default {
       enabled: true
     })
 
+    // Timezone state
+    const currentTimezone = ref(null)
+    const selectedTimezone = ref('UTC')
+    const savingTimezone = ref(false)
+    const timezoneMessage = ref('')
+    const timezoneSuccess = ref(false)
+
     const hasChanges = computed(() => {
       return JSON.stringify(schedules.value) !== JSON.stringify(originalSchedules.value)
     })
@@ -204,6 +286,42 @@ export default {
 
     const formatTime = (hour, minute) => {
       return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`
+    }
+
+    const formatUtcOffset = (seconds) => {
+      if (seconds === null || seconds === undefined) return 'Unknown'
+      const hours = Math.floor(Math.abs(seconds) / 3600)
+      const mins = Math.floor((Math.abs(seconds) % 3600) / 60)
+      const sign = seconds >= 0 ? '+' : '-'
+      return mins > 0 ? `UTC${sign}${hours}:${String(mins).padStart(2, '0')}` : `UTC${sign}${hours}`
+    }
+
+    const fetchTimezone = async () => {
+      try {
+        const response = await api.getTimezone()
+        currentTimezone.value = response.data
+        selectedTimezone.value = response.data.timezone
+      } catch (error) {
+        console.error('Failed to fetch timezone:', error)
+      }
+    }
+
+    const saveTimezone = async () => {
+      savingTimezone.value = true
+      timezoneMessage.value = ''
+      try {
+        const response = await api.updateTimezone(selectedTimezone.value)
+        currentTimezone.value = response.data
+        timezoneMessage.value = 'Timezone updated successfully'
+        timezoneSuccess.value = true
+      } catch (error) {
+        timezoneMessage.value = error.response?.data?.detail || 'Failed to update timezone'
+        timezoneSuccess.value = false
+      } finally {
+        savingTimezone.value = false
+        // Clear message after 3 seconds
+        setTimeout(() => { timezoneMessage.value = '' }, 3000)
+      }
     }
 
     const addSchedule = () => {
@@ -257,7 +375,10 @@ export default {
       }
     }
 
-    onMounted(fetchSchedules)
+    onMounted(() => {
+      fetchSchedules()
+      fetchTimezone()
+    })
 
     return {
       schedules,
@@ -267,14 +388,21 @@ export default {
       showModal,
       editingIndex,
       editingSchedule,
+      currentTimezone,
+      selectedTimezone,
+      savingTimezone,
+      timezoneMessage,
+      timezoneSuccess,
       formatTime,
+      formatUtcOffset,
       addSchedule,
       editSchedule,
       removeSchedule,
       toggleSchedule,
       closeModal,
       confirmEdit,
-      saveSchedules
+      saveSchedules,
+      saveTimezone
     }
   }
 }

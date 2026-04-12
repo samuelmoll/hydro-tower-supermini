@@ -13,6 +13,7 @@ static PubSubClient mqttClient(wifiClient);
 static void (*pumpControlCallback)(const char* action) = nullptr;
 static void (*scheduleConfigCallback)(JsonArray& schedules) = nullptr;
 static void (*sensorConfigCallback)(int intervalSec) = nullptr;
+static void (*timezoneConfigCallback)(int gmtOffsetSec, int dstOffsetSec) = nullptr;
 
 // Last reconnect attempt time
 static unsigned long lastReconnectAttempt = 0;
@@ -57,6 +58,13 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
             sensorConfigCallback(interval);
         }
     }
+    else if (strcmp(topic, MQTT_TOPIC_TIMEZONE_CONFIG) == 0) {
+        if (timezoneConfigCallback && doc.containsKey("gmt_offset_sec")) {
+            int gmtOffset = doc["gmt_offset_sec"];
+            int dstOffset = doc["daylight_offset_sec"] | 0;
+            timezoneConfigCallback(gmtOffset, dstOffset);
+        }
+    }
 }
 
 /**
@@ -83,6 +91,7 @@ bool mqttConnect() {
         mqttClient.subscribe(MQTT_TOPIC_PUMP_CONTROL);
         mqttClient.subscribe(MQTT_TOPIC_SCHEDULE_CONFIG);
         mqttClient.subscribe(MQTT_TOPIC_SENSOR_CONFIG);
+        mqttClient.subscribe(MQTT_TOPIC_TIMEZONE_CONFIG);
         
         DEBUG_PRINTLN("[MQTT] Subscribed to control topics");
         
@@ -183,4 +192,8 @@ void mqttOnScheduleConfig(void (*callback)(JsonArray& schedules)) {
 
 void mqttOnSensorConfig(void (*callback)(int intervalSec)) {
     sensorConfigCallback = callback;
+}
+
+void mqttOnTimezoneConfig(void (*callback)(int gmtOffsetSec, int dstOffsetSec)) {
+    timezoneConfigCallback = callback;
 }

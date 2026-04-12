@@ -98,6 +98,18 @@ void pumpUpdateSchedulesFromJson(JsonArray& schedules);
 void pumpSyncTime();
 
 /**
+ * Update timezone configuration
+ * @param gmtOffsetSec GMT offset in seconds
+ * @param dstOffsetSec Daylight saving offset in seconds
+ */
+void pumpSetTimezone(int gmtOffsetSec, int dstOffsetSec);
+
+/**
+ * Get current GMT offset in seconds
+ */
+int pumpGetGmtOffset();
+
+/**
  * Get current time as string (HH:MM:SS)
  */
 String pumpGetTimeString();
